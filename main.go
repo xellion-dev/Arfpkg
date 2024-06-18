@@ -2,11 +2,21 @@ package main
 
 import (
 	"fmt"
-	"os"
 )
 
 func main() {
-	fmt.Printf("---arfpkg v1.0 b1.1---")
-	arg := os.Args[1]
-	fmt.Println(" " + arg)
+
+	var oper string
+	var pkg string
+	fmt.Println("-----|arfpkg V1.1|-----")
+	fmt.Println("Enter operation ")
+	fmt.Scanln(&oper)
+
+	if oper == "install" {
+		fmt.Println("Enter package name: ")
+		fmt.Scanln(&pkg)
+
+		fmt.Printf("Package not found.")
+	}
+	fmt.Printf("\nexiting...")
 }
