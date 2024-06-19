@@ -2,33 +2,40 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"strings"
 
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml"
 )
 
-type Config struct {
-	name    string
-	version int
-}
-
 func main() {
-	var config Config
 	var oper string
 	var pkg string
-	_, err := toml.DecodeFile("packages.toml", &config)
+	tree, err := toml.LoadFile("packages.toml")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("-----|arfpkg V1.1|-----")
-	fmt.Println(config.name)
-	fmt.Println("Enter operation ")
+
+	// get value
+	fmt.Printf("-----|arfpkg V1.1|-----")
+	fmt.Printf("\nEnter operation ")
 	fmt.Scanln(&oper)
 	if oper == "install" {
 		fmt.Println("Enter package name: ")
 		fmt.Scanln(&pkg)
+		b, err := ioutil.ReadFile("packages.toml")
+		if err != nil {
+			panic(err)
+		}
+		s := string(b)
 
-		fmt.Printf("Package not found.")
+		if strings.Contains(s, pkg) {
+			fmt.Println(tree.Get("packages." + pkg + ".version"))
+		} else {
+			fmt.Printf("invalid package given")
+		}
+
 	}
 	fmt.Printf("\nexiting... ")
 	os.Exit(0)

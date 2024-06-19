@@ -1,3 +1,5 @@
-# Start packages
-name = "angrybirds"
-version = 2
+# A table
+[packages]
+    [packages.angrybirds]
+        url = "angrybirds"
+        version = 2
