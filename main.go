@@ -31,7 +31,7 @@ func main() {
 		s := string(b)
 
 		if strings.Contains(s, pkg) {
-			fmt.Println(tree.Get("packages." + pkg + ".version"))
+			tree.Get("packages." + pkg + ".url")
 		} else {
 			fmt.Printf("invalid package given")
 		}
