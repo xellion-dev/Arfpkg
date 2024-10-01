@@ -1,5 +1,5 @@
-# A table
-[packages]
+# Package Tree
+[packages] 
     [packages.angrybirds]
-        url = "angrybirds"
-        version = 2
+        url = "angrybirds" # URL for wget
+        version = 2 # Package Version

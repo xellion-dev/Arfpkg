@@ -1,3 +1,5 @@
 # arfpkg
 
-The package manager for poodleos
+The package manager for PoodleOS / CanicheDE
+
+Migrated from self hosted gitea
