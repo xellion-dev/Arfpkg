@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.3] - 2024-09-30
 - Migrate from self-gitea to gitlab
+- Add error message
 
 ## [0.0.3] - 2024-07-19
 - Use TOML for package list

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/pelletier/go-toml"
@@ -12,8 +13,10 @@ import (
 func main() {
 	var oper string
 	var pkg string
+	installcmd := exec.Command("wget", "https://www.nano-editor.org/dist/v8/nano-8.2.tar.xz")
 	tree, err := toml.LoadFile("packages.toml")
 	if err != nil {
+		fmt.Printf("An error has occured")
 		panic(err)
 	}
 
@@ -32,6 +35,12 @@ func main() {
 
 		if strings.Contains(s, pkg) {
 			tree.Get("packages." + pkg + ".url")
+			out, err := installcmd.Output()
+			if err != nil {
+				fmt.Println("could not run command: ", err)
+			}
+			fmt.Println("Output: ", string(out))
+
 		} else {
 			fmt.Printf("invalid package given")
 		}
