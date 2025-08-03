@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -8,44 +9,79 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml"
+	"github.com/pieterclaerhout/go-log"
 )
 
 func main() {
 	var oper string
 	var pkg string
-	installcmd := exec.Command("wget", "https://www.nano-editor.org/dist/v8/nano-8.2.tar.xz")
-	tree, err := toml.LoadFile("packages.toml")
-	if err != nil {
-		fmt.Printf("An error has occured")
-		panic(err)
-	}
-
-	// get value
-	fmt.Printf("-----|arfpkg V1.1|-----")
-	fmt.Printf("\nEnter operation ")
-	fmt.Scanln(&oper)
-	if oper == "install" {
-		fmt.Println("Enter package name: ")
-		fmt.Scanln(&pkg)
-		b, err := ioutil.ReadFile("packages.toml")
+	var yn string
+	if os.Getuid() == 0 {
+		tree, err := toml.LoadFile("packages.toml")
 		if err != nil {
 			panic(err)
 		}
-		s := string(b)
 
-		if strings.Contains(s, pkg) {
-			tree.Get("packages." + pkg + ".url")
-			out, err := installcmd.Output()
+		// get value
+		fmt.Printf("-----|arfpkg V1.1|-----")
+		fmt.Printf("\nEnter operation ")
+		fmt.Scanln(&oper)
+		if oper == "install" {
+			fmt.Println("Enter package name: ")
+			fmt.Scanln(&pkg)
+			b, err := ioutil.ReadFile("packages.toml")
 			if err != nil {
-				fmt.Println("could not run command: ", err)
+				panic(err)
 			}
-			fmt.Println("Output: ", string(out))
+			s := string(b)
 
-		} else {
-			fmt.Printf("invalid package given")
+			if strings.Contains(s, pkg) {
+				url := tree.Get("packages." + pkg + ".url").(string)
+				xzname := tree.Get("packages." + pkg + ".xzname").(string)
+				foldername := tree.Get("packages." + pkg + ".foldername").(string)
+				version := tree.Get("packages." + pkg + ".version").(string)
+				fmt.Printf("Install " + pkg + " " + version + "?\n")
+				fmt.Printf("Y/N\n")
+				fmt.Scanln(&yn)
+				if yn == "y" {
+					fmt.Printf("Downloading Packages...\n")
+					geturl := exec.Command("curl", "-#", "-o", "/bin/arfpkg/"+xzname, url)
+					r, _ := geturl.StdoutPipe()
+					geturl.Stderr = geturl.Stdout
+					done := make(chan struct{})
+					scanner := bufio.NewScanner(r)
+					go func() {
+						for scanner.Scan() {
+							line := scanner.Text()
+							log.Info(line)
+						}
+						done <- struct{}{}
+					}()
+					err := geturl.Start()
+					log.CheckError(err)
+					<-done
+					err = geturl.Wait()
+					log.CheckError(err)
+					geturl.Run()
+					fmt.Printf("Extracting...")
+					extpkg := exec.Command("tar", "-xvf", "/bin/arfpkg/"+xzname, "-C", "/bin/arfpkg/"+foldername)
+					extpkg.Run()
+					fmt.Printf("\nCleaning Up...")
+					del := exec.Command("rm", "-rf", foldername+version)
+					del.Run()
+					fmt.Printf("\nAll Done\n")
+				} else {
+					fmt.Printf("Aborted.\n")
+				}
+
+			} else {
+				fmt.Printf("Package Not Found")
+			}
+			fmt.Printf("\nexiting... \n")
+			os.Exit(0)
 		}
-
+	} else {
+		fmt.Printf("\nPlease run as root(or sudo)\n")
+		os.Exit(1)
 	}
-	fmt.Printf("\nexiting... ")
-	os.Exit(0)
 }

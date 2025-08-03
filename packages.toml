@@ -1,5 +1,8 @@
-# Package Tree
-[packages] 
-    [packages.angrybirds]
-        url = "angrybirds" # URL for wget
-        version = 2 # Package Version
+[packages]
+    [packages.tar]
+        # MUST BE TAR.XZ!!!!!
+        url = "https://ftp.gnu.org/gnu/tar/tar-latest.tar.xz"
+        xzname = "tar-latest.tar.xz"
+        version = "1.35"
+        foldername = "tar-" #SCRIPT ADDS VERSION
+
