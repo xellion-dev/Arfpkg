@@ -45,7 +45,7 @@ func main() {
 				fmt.Scanln(&yn)
 				if yn == "y" {
 					fmt.Printf("Downloading Packages...\n")
-					geturl := exec.Command("curl", "-#", "-o", "/bin/arfpkg/"+xzname, url)
+					geturl := exec.Command("curl", "-#", "-o", "/bin/arfpkg/temp/"+xzname, url)
 					r, _ := geturl.StdoutPipe()
 					geturl.Stderr = geturl.Stdout
 					done := make(chan struct{})
@@ -64,10 +64,22 @@ func main() {
 					log.CheckError(err)
 					geturl.Run()
 					fmt.Printf("Extracting...")
-					mkpkgdir := exec.Command("mkdir", "/bin/arfpkg/"+foldername+version)
+					mkpkgdir := exec.Command("mkdir", "/bin/arfpkg/temp/"+foldername+version)
 					mkpkgdir.Run()
-					extpkg := exec.Command("tar", "-xvf", "/bin/arfpkg/"+xzname, "-C", "/bin/arfpkg/"+foldername+version)
+					extpkg := exec.Command("tar", "-xvf", "/bin/arfpkg/temp/"+xzname, "-C", "/bin/arfpkg/temp/"+foldername+version)
 					extpkg.Run()
+					fmt.Printf("\nInstalling\n")
+
+					tree2, err := toml.LoadFile("/bin/arfpkg/temp/tar-1.35/tar-latest/tar.toml")
+					if err != nil {
+						panic(err)
+					}
+					instdir := tree2.Get(pkg + "." + "install-location").(string)
+					bins := tree2.Get(pkg + ".binaries" + ".mainexec").(string)
+					cd := exec.Command("cd", "/bin/arfpkg/temp/"+foldername+version+"/"+pkg+"-latest")
+					cd.Run()
+					inst := exec.Command("mv", "/bin/arfpkg/temp/"+foldername+version+"/"+pkg+"-latest/"+bins, instdir+"/"+pkg)
+					inst.Run()
 					fmt.Printf("\nCleaning Up...")
 					del := exec.Command("rm", "-rf", foldername+version)
 					del.Run()
