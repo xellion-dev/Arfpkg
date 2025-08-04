@@ -16,34 +16,37 @@ func main() {
 	var oper string
 	var pkg string
 	var yn string
+	//check if sudo
 	if os.Getuid() == 0 {
 		tree, err := toml.LoadFile("packages.toml")
 		if err != nil {
 			panic(err)
 		}
-
-		// get value
+		// init
 		fmt.Printf("-----|arfpkg V1.1|-----")
 		fmt.Printf("\nEnter operation ")
 		fmt.Scanln(&oper)
+		// if install, install
 		if oper == "install" {
 			fmt.Println("Enter package name: ")
 			fmt.Scanln(&pkg)
+			// TOML loading
 			b, err := ioutil.ReadFile("packages.toml")
 			if err != nil {
 				panic(err)
 			}
 			s := string(b)
-
+			url := tree.Get("packages." + pkg + ".url").(string)
+			xzname := tree.Get("packages." + pkg + ".xzname").(string)
+			foldername := tree.Get("packages." + pkg + ".foldername").(string)
+			version := tree.Get("packages." + pkg + ".version").(string)
 			if strings.Contains(s, pkg) {
-				url := tree.Get("packages." + pkg + ".url").(string)
-				xzname := tree.Get("packages." + pkg + ".xzname").(string)
-				foldername := tree.Get("packages." + pkg + ".foldername").(string)
-				version := tree.Get("packages." + pkg + ".version").(string)
+				// if it contains a recognized package, ask with Y/N dialog to install
 				fmt.Printf("Install " + pkg + " " + version + "?\n")
 				fmt.Printf("Y/N\n")
 				fmt.Scanln(&yn)
 				if yn == "y" {
+					// if yes, install
 					fmt.Printf("Downloading Packages...\n")
 					geturl := exec.Command("curl", "-#", "-o", "/bin/arfpkg/temp/"+xzname, url)
 					r, _ := geturl.StdoutPipe()
@@ -80,6 +83,8 @@ func main() {
 					cd.Run()
 					inst := exec.Command("mv", "/bin/arfpkg/temp/"+foldername+version+"/"+pkg+"-latest/"+bins, instdir+"/"+pkg)
 					inst.Run()
+					chmod := exec.Command("chmod", "+x", instdir+"/"+pkg)
+					chmod.Run()
 					fmt.Printf("\nCleaning Up...")
 					del := exec.Command("rm", "-rf", foldername+version)
 					del.Run()
