@@ -4,7 +4,6 @@ import (
 	"bufio"
 	//main.go
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -22,7 +21,7 @@ func install() {
 		panic(err)
 	}
 
-	b, err := ioutil.ReadFile("/bin/arfpkg/temp/packages.toml")
+	b, err := os.ReadFile("/bin/arfpkg/temp/packages.toml")
 	if err != nil {
 		panic(err)
 	}

@@ -1,18 +1,12 @@
 package main
 
 import (
-	//"bufio"
 	"fmt"
-	//"io/ioutil"
-
-	//	"io/ioutil"
 	"os"
 	"os/exec"
-	//"strings"
-	//"github.com/pelletier/go-toml"
-	//"github.com/pieterclaerhout/go-log"
 )
 
+// global vars
 var oper string
 var pkg string
 var yn string
