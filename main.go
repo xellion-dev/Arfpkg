@@ -24,6 +24,11 @@ func main() {
 		// if install, install
 		if oper == "install" {
 			install()
+
+		} else if oper == "remove" {
+			remove()
+		} else {
+			fmt.Printf("operation '" + oper + "' is not valid.\n")
 		}
 	} else {
 		fmt.Printf("\nPlease run as root(or sudo)\n")
