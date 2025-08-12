@@ -28,9 +28,10 @@ We welcome contributions in the form of:
 
 ## Code of Conduct
 
-[coming soon]
+1. Dont make unnecessary pull requests
+2. Open an Issue if you want a feature added
+3. Remember that arfpkg is in the very early stages. Not all pull requests will be accepted.
 
 ## Contact
 
 You can contact me at ixdoggo@hotmail.com
-[]
