@@ -84,13 +84,16 @@ func remove() {
 			rem := exec.Command("rm", instdir+"/"+pkg)
 			// remove temp files
 			del := exec.Command("rm", "-rf", "/bin/arfpkg/temp/"+foldername+version)
-			// Move the tarball to archive
+			// move the tarball to archive
 			archive := exec.Command("mv", "/bin/arfpkg/temp/"+xzname, "/bin/arfpkg/package_archive/"+pkg+".tar.xz")
+			// remove app from index
+			rmindx := exec.Command("rm", "/bin/arfpkg/packages/"+pkg+".toml")
 			cd.Run()
 			rem.Run()
 			fmt.Printf("\nCleaning Up...")
 			del.Run()
 			archive.Run()
+			rmindx.Run()
 			fmt.Printf("\nAll Done\n")
 		} else {
 			fmt.Printf("Aborted.\n")

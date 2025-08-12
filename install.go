@@ -12,6 +12,11 @@ import (
 	"github.com/pieterclaerhout/go-log"
 )
 
+type PackageInfo struct {
+	Name    string
+	Version string
+}
+
 func install() {
 	fmt.Println("Enter package name: ")
 	fmt.Scanln(&pkg)
@@ -74,12 +79,12 @@ func install() {
 			extpkg.Run()
 			fmt.Printf("\nInstalling\n")
 			// load TOML
-			tree2, err := toml.LoadFile("/bin/arfpkg/temp/" + pkg + "-" + version + "/" + pkg + "-latest/" + pkg + ".toml")
+			pkgconf, err := toml.LoadFile("/bin/arfpkg/temp/" + pkg + "-" + version + "/" + pkg + "-latest/" + pkg + ".toml")
 			if err != nil {
 				panic(err)
 			}
-			instdir := tree2.Get(pkg + "." + "install-location").(string)
-			bins := tree2.Get(pkg + ".binaries" + ".mainexec").(string)
+			instdir := pkgconf.Get(pkg + "." + "install-location").(string)
+			bins := pkgconf.Get(pkg + ".binaries" + ".mainexec").(string)
 			// install binary to /bin
 			inst := exec.Command("mv", "/bin/arfpkg/temp/"+foldername+version+"/"+pkg+"-latest/"+bins, instdir+"/"+pkg)
 			// make the file executable with CHMOD
@@ -94,6 +99,21 @@ func install() {
 			fmt.Printf("\nCleaning Up...")
 			del.Run()
 			archive.Run()
+
+			pkginfo := PackageInfo{
+				Name:    pkg,
+				Version: version,
+			}
+			data, err := toml.Marshal(pkginfo)
+			if err != nil {
+				panic(err)
+			}
+			err = os.WriteFile("/bin/arfpkg/packages/"+pkg+".toml", data, 0644) // 0644 sets file permissions
+			if err != nil {
+				panic(err)
+			}
+			cleartmp := exec.Command("rm -rf", "/bin/arfpkg/temp/packages.toml")
+			cleartmp.Run()
 			fmt.Printf("\nAll Done\n")
 		} else {
 			fmt.Printf("Aborted.\n")
