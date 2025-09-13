@@ -2,33 +2,55 @@ package main
 
 import (
 	"fmt"
-	"log"
-
-	"github.com/hashicorp/go-getter/v2"
-	"github.com/pelletier/go-toml"
+	"io"
+	"net/http"
+	"os"
 )
 
-func downaload() {
-	pkglist, err := toml.LoadFile("/bin/arfpkg/temp/packages.toml")
-	url := pkglist.Get("packages." + pkg + ".url").(string)
-	xzname := pkglist.Get("packages." + pkg + ".xzname").(string)
-	// Download a Git repository
-	sourceURL := url
-	destDir := "/bin/arfpkg/temp/" + xzname // The destination directory
+// FINALLY CLEAN DOWNLOADING!!!1!!!1!!
 
-	result, err := getter.Get(destDir, sourceURL)
+func download(pkg string, url string) error {
+	packagenm := "/bin/arfpkg/temp/" + pkg
+	err := downloadFile(url, packagenm)
 	if err != nil {
-		log.Fatalf("Error downloading: %v", err)
+		fmt.Printf("ERROR!!!!\n exiting...", err)
+	} else {
+		fmt.Printf("")
+	}
+	return err
+}
+
+func downloadFile(url string, filePath string) error {
+	output, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("error creating file: %w", err)
+	}
+	defer func(output *os.File) {
+		err := output.Close()
+		if err != nil {
+			fmt.Printf("Error closing file: %v\n", err)
+		}
+	}(output)
+
+	response, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("error making HTTP request: %w", err)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Printf("Error closing body: %v\n", err)
+		}
+	}(response.Body)
+
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("bad status code: %d %s", response.StatusCode, response.Status)
 	}
 
-	fmt.Printf("Successfully downloaded from %s to %s\n", sourceURL, result)
+	_, err = io.Copy(output, response.Body)
+	if err != nil {
+		return fmt.Errorf("error copying data: %w", err)
+	}
 
-	// Example of downloading a specific file from HTTP
-	// sourceURL := "https://example.com/myfile.txt"
-	// destDir := "./myfile.txt"
-	// result, err := getter.Get(destDir, sourceURL)
-	// if err != nil {
-	// 	log.Fatalf("Error downloading: %v", err)
-	// }
-	// fmt.Printf("Successfully downloaded from %s to %s\n", sourceURL, result)
+	return nil
 }

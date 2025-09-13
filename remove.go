@@ -41,8 +41,6 @@ func remove() {
 	mkpkgdir := exec.Command("mkdir", "/bin/arfpkg/temp/"+foldername+version)
 	// extract tarball with tar
 	extpkg := exec.Command("tar", "-xvf", "/bin/arfpkg/temp/"+xzname, "-C", "/bin/arfpkg/temp/"+foldername+version)
-	// enter directory from extracted tarball
-	cd := exec.Command("cd", "/bin/arfpkg/temp/"+foldername+version+"/"+pkg+"-latest")
 
 	if strings.Contains(s, pkg) {
 		// if it contains a recognized package, ask with Y/N dialog to install
@@ -91,7 +89,6 @@ func remove() {
 			archive := exec.Command("mv", "/bin/arfpkg/temp/"+xzname, "/bin/arfpkg/package_archive/"+pkg+".tar.xz")
 			// remove app from index
 			rmindx := exec.Command("rm", "/bin/arfpkg/packages/"+pkg+".toml")
-			cd.Run()
 			rem.Run()
 			fmt.Printf("\nCleaning Up...")
 			del.Run()

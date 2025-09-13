@@ -9,6 +9,7 @@
       <w>instdir</w>
       <w>mainexec</w>
       <w>mkpkgdir</w>
+      <w>packagenm</w>
       <w>pkglist</w>
       <w>xzname</w>
     </words>

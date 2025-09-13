@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	//main.go
 	"fmt"
 	"os"
@@ -9,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml"
-	"github.com/pieterclaerhout/go-log"
 )
 
 type PackageInfo struct {
@@ -38,13 +36,11 @@ func install() {
 	// exec commands
 
 	// download tarball with cURL
-	geturl := exec.Command("curl", "-#", "-o", "/bin/arfpkg/temp/"+xzname, url)
+	//geturl := exec.Command("curl", "-#", "-o", "/bin/arfpkg/temp/"+xzname, url)
 	// make the temp dir for installation
 	mkpkgdir := exec.Command("mkdir", "/bin/arfpkg/temp/"+foldername+version)
 	// extract tarball with tar
 	extpkg := exec.Command("tar", "-xvf", "/bin/arfpkg/temp/"+xzname, "-C", "/bin/arfpkg/temp/"+foldername+version)
-	// enter directory from extracted tarball
-	//cd := exec.Command("cd", "/bin/arfpkg/temp/"+foldername+version+"/"+pkg+"-latest")
 
 	if strings.Contains(s, pkg) {
 		// if it contains a recognized package, ask with Y/N dialog to install
@@ -54,23 +50,12 @@ func install() {
 		if yn == "y" {
 			// if yes, install
 			fmt.Printf("Downloading Packages...\n")
-			// output cURL progress
-			r, _ := geturl.StdoutPipe()
-			geturl.Stderr = geturl.Stdout
-			done := make(chan struct{})
-			scanner := bufio.NewScanner(r)
-			go func() {
-				for scanner.Scan() {
-					line := scanner.Text()
-					log.Info(line)
-				}
-				done <- struct{}{}
-			}()
-			err := geturl.Start()
-			log.CheckError(err)
-			<-done
-			err = geturl.Wait()
-			log.CheckError(err)
+			// download files with download function
+			err := download(xzname, url)
+			if err != nil {
+				return
+			}
+
 			fmt.Printf("Extracting...")
 			// extract tarball with tar
 
