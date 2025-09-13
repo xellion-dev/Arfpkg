@@ -34,13 +34,8 @@ func install() {
 	foldername := pkglist.Get("packages." + pkg + ".foldername").(string)
 	version := pkglist.Get("packages." + pkg + ".version").(string)
 	// exec commands
-
-	// download tarball with cURL
-	//geturl := exec.Command("curl", "-#", "-o", "/bin/arfpkg/temp/"+xzname, url)
-	// make the temp dir for installation
-	mkpkgdir := exec.Command("mkdir", "/bin/arfpkg/temp/"+foldername+version)
-	// extract tarball with tar
-	extpkg := exec.Command("tar", "-xvf", "/bin/arfpkg/temp/"+xzname, "-C", "/bin/arfpkg/temp/"+foldername+version)
+	mkpkgdir := os.MkdirAll
+	extpkg := tarxz
 
 	if strings.Contains(s, pkg) {
 		// if it contains a recognized package, ask with Y/N dialog to install
@@ -59,9 +54,12 @@ func install() {
 			fmt.Printf("Extracting...")
 			// extract tarball with tar
 
-			mkpkgdir.Run()
-
-			extpkg.Run()
+			// make package directory
+			err = mkpkgdir("/bin/arfpkg/temp/"+foldername+version, 0755)
+			if err != nil {
+				fmt.Println("Error (cannot continue): ", err)
+			}
+			extpkg(xzname, foldername, version)
 			fmt.Printf("\nInstalling\n")
 			// load TOML
 			pkgconf, err := toml.LoadFile("/bin/arfpkg/temp/" + pkg + "-" + version + "/" + pkg + "-latest/" + pkg + ".toml")
