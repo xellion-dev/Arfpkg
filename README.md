@@ -1,6 +1,6 @@
-# arfpkg
+# Arfpkg
 
-The package manager for PoodleOS / CanicheDE
-Migrated from self hosted gitea
-The package manager for poodleos
+Arfpkg is the package manager for PoodleOS.
+Poodlemanager (https://github.com/xellion-dev/poodlemanager) is the precursor to Arfpkg.
+(c) XEL 2023 - 2025
 
