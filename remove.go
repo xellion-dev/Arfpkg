@@ -23,7 +23,10 @@ func remove() {
 
 	b, err := os.ReadFile("/bin/arfpkg/temp/packages.toml")
 	if err != nil {
-		panic(err)
+		fmt.Printf("\nFatal error: ")
+		fmt.Println(err)
+		fmt.Printf("\nexiting...\n")
+		os.Exit(1)
 	}
 	s := string(b)
 	url := pkglist.Get("packages." + pkg + ".url").(string)

@@ -28,7 +28,7 @@ func install() {
 
 	b, err := os.ReadFile("/bin/arfpkg/temp/packages.toml")
 	if err != nil {
-		panic(err)
+		os.Exit(1)
 	}
 	s := string(b)
 	url := pkglist.Get("packages." + pkg + ".url").(string)
@@ -44,7 +44,7 @@ func install() {
 	// extract tarball with tar
 	extpkg := exec.Command("tar", "-xvf", "/bin/arfpkg/temp/"+xzname, "-C", "/bin/arfpkg/temp/"+foldername+version)
 	// enter directory from extracted tarball
-	cd := exec.Command("cd", "/bin/arfpkg/temp/"+foldername+version+"/"+pkg+"-latest")
+	//cd := exec.Command("cd", "/bin/arfpkg/temp/"+foldername+version+"/"+pkg+"-latest")
 
 	if strings.Contains(s, pkg) {
 		// if it contains a recognized package, ask with Y/N dialog to install
@@ -93,7 +93,7 @@ func install() {
 			del := exec.Command("rm", "-rf", "/bin/arfpkg/temp/"+foldername+version)
 			// Move the tarball to archive
 			archive := exec.Command("mv", "/bin/arfpkg/temp/"+xzname, "/bin/arfpkg/package_archive/"+pkg+".tar.xz")
-			cd.Run()
+			//	cd.Run()
 			inst.Run()
 			chmod.Run()
 			fmt.Printf("\nCleaning Up...")
@@ -122,6 +122,4 @@ func install() {
 	} else {
 		fmt.Printf("Package Not Found")
 	}
-	fmt.Printf("\nexiting... \n")
-	os.Exit(0)
 }
