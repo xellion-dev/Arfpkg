@@ -1,15 +1,14 @@
 // MODIFIED VERSION OF INSTALL SCRIPT
+// if someone would like to clean up and rewrite, that would be greatly appreciated
 package main
 
 import (
-	"bufio"
+	//main.go
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/pelletier/go-toml"
-	"github.com/pieterclaerhout/go-log"
 )
 
 func remove() {
@@ -20,88 +19,89 @@ func remove() {
 	if err != nil {
 		panic(err)
 	}
-
 	b, err := os.ReadFile("/bin/arfpkg/temp/packages.toml")
 	if err != nil {
-		fmt.Printf("\nFatal error: ")
-		fmt.Println(err)
-		fmt.Printf("\nexiting...\n")
 		os.Exit(1)
 	}
 	s := string(b)
+
+	// TOML refs
 	url := pkglist.Get("packages." + pkg + ".url").(string)
 	xzname := pkglist.Get("packages." + pkg + ".xzname").(string)
 	foldername := pkglist.Get("packages." + pkg + ".foldername").(string)
 	version := pkglist.Get("packages." + pkg + ".version").(string)
-	// exec commands
 
-	// download tarball with cURL
-	geturl := exec.Command("curl", "-#", "-o", "/bin/arfpkg/temp/"+xzname, url)
-	// make the temp dir for metadata
-	mkpkgdir := exec.Command("mkdir", "/bin/arfpkg/temp/"+foldername+version)
-	// extract tarball with tar
-	extpkg := exec.Command("tar", "-xvf", "/bin/arfpkg/temp/"+xzname, "-C", "/bin/arfpkg/temp/"+foldername+version)
+	// easier just to point and not make the code unbearbly long
+	move := os.Rename
+	mkpkgdir := os.MkdirAll
+	extpkg := tarxz
+	del := os.Remove
+	archive := move
+	cleartmp := os.Remove
 
 	if strings.Contains(s, pkg) {
 		// if it contains a recognized package, ask with Y/N dialog to install
-		fmt.Printf("Remove " + pkg + " " + version + "?\n")
+		fmt.Printf("remove " + pkg + " " + version + "?\n")
 		fmt.Printf("Y/N\n")
 		fmt.Scanln(&yn)
 		if yn == "y" {
-			// if yes, start removing
-			fmt.Printf("Downloading package data...\n")
-			// output cURL progress
-			r, _ := geturl.StdoutPipe()
-			geturl.Stderr = geturl.Stdout
-			done := make(chan struct{})
-			scanner := bufio.NewScanner(r)
-			go func() {
-				for scanner.Scan() {
-					line := scanner.Text()
-					log.Info(line)
-				}
-				done <- struct{}{}
-			}()
-			err := geturl.Start()
-			log.CheckError(err)
-			<-done
-			err = geturl.Wait()
-			log.CheckError(err)
+			// if yes, begin removing
+			fmt.Printf("Downloading Package Metadata...\n")
+			// download files with download function
+			err := download(xzname, url)
+			if err != nil {
+				return
+			}
+
 			fmt.Printf("Extracting...")
 			// extract tarball with tar
+			// make package directory
+			err = mkpkgdir("/bin/arfpkg/temp/"+foldername+version, 0755)
+			if err != nil {
+				fmt.Println("Error (cannot continue): ", err)
+			}
+			extpkg(xzname, foldername, version)
 
-			mkpkgdir.Run()
-
-			extpkg.Run()
-			fmt.Printf("\nBegin Removal...\n")
-			// load TOML
-			tree2, err := toml.LoadFile("/bin/arfpkg/temp/" + pkg + "-" + version + "/" + pkg + "-latest/" + pkg + ".toml")
+			fmt.Printf("\nRemoving...\n")
+			// load package TOML
+			pkgconf, err := toml.LoadFile("/bin/arfpkg/temp/" + pkg + "-" + version + "/" + pkg + "-latest/" + pkg + ".toml")
 			if err != nil {
 				panic(err)
 			}
-			// get dir where binary was installed
-			instdir := tree2.Get(pkg + "." + "install-location").(string)
-			// remove binary(ies)
-			rem := exec.Command("rm", instdir+"/"+pkg)
-			// remove temp files
-			del := exec.Command("rm", "-rf", "/bin/arfpkg/temp/"+foldername+version)
-			// move the tarball to archive
-			archive := exec.Command("mv", "/bin/arfpkg/temp/"+xzname, "/bin/arfpkg/package_archive/"+pkg+".tar.xz")
-			// remove app from index
-			rmindx := exec.Command("rm", "/bin/arfpkg/packages/"+pkg+".toml")
-			rem.Run()
-			fmt.Printf("\nCleaning Up...")
-			del.Run()
-			archive.Run()
-			rmindx.Run()
-			fmt.Printf("\nAll Done\n")
+			instdir := pkgconf.Get(pkg + "." + "install-location").(string)
+			//	bins := pkgconf.Get(pkg + ".binaries" + ".mainexec").(string)
+			err = del(instdir + "/" + pkg)
+			if err != nil {
+				return
+			}
+
+			fmt.Printf("\nCleaning Up...\n")
+			err = del("/bin/arfpkg/temp/" + foldername + version)
+			if err != nil {
+				return
+			}
+			err = archive("/bin/arfpkg/temp/"+xzname, "/bin/arfpkg/package_archive/"+pkg+".tar.xz")
+			if err != nil {
+				return
+			}
+
+			err = del("/bin/arfpkg/packages/" + pkg + ".toml") // delete package TOML; Unused for now
+			if err != nil {
+				panic(err)
+			}
+
+			err = cleartmp("/bin/arfpkg/temp/packages.toml")
+			if err != nil {
+				return
+			}
+			fmt.Printf("\nAll Done! 🦴\n")
 		} else {
+			// if no, abort
 			fmt.Printf("Aborted.\n")
 		}
 
 	} else {
-		fmt.Printf("Package Not Found")
+		// if no package found, exit
+		fmt.Printf("Package Not Found/Installed")
 	}
-	fmt.Printf("\nexiting... \n")
-	os.Exit(0)
 }
