@@ -21,7 +21,7 @@ func main() {
 
 		}
 		//args := os.Args
-		fmt.Printf("-----|arfpkg V1.2|-----")
+		fmt.Printf("-----|arfpkg V1.3|-----")
 		fmt.Printf("\nEnter operation ")
 		fmt.Scanln(&oper)
 		// if install, install

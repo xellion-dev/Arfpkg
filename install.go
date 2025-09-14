@@ -4,7 +4,6 @@ import (
 	//main.go
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/pelletier/go-toml"
@@ -23,19 +22,27 @@ func install() {
 	if err != nil {
 		panic(err)
 	}
-
 	b, err := os.ReadFile("/bin/arfpkg/temp/packages.toml")
 	if err != nil {
 		os.Exit(1)
 	}
 	s := string(b)
+
+	// TOML refs
 	url := pkglist.Get("packages." + pkg + ".url").(string)
 	xzname := pkglist.Get("packages." + pkg + ".xzname").(string)
 	foldername := pkglist.Get("packages." + pkg + ".foldername").(string)
 	version := pkglist.Get("packages." + pkg + ".version").(string)
-	// exec commands
+
+	// easier just to point and not make the code unbearbly long
+	move := os.Rename
 	mkpkgdir := os.MkdirAll
 	extpkg := tarxz
+	chmod := os.Chmod
+	del := os.Remove
+	archive := move
+	inst := move
+	cleartmp := os.Remove
 
 	if strings.Contains(s, pkg) {
 		// if it contains a recognized package, ask with Y/N dialog to install
@@ -53,36 +60,39 @@ func install() {
 
 			fmt.Printf("Extracting...")
 			// extract tarball with tar
-
 			// make package directory
 			err = mkpkgdir("/bin/arfpkg/temp/"+foldername+version, 0755)
 			if err != nil {
 				fmt.Println("Error (cannot continue): ", err)
 			}
 			extpkg(xzname, foldername, version)
+
 			fmt.Printf("\nInstalling\n")
-			// load TOML
+			// load package TOML
 			pkgconf, err := toml.LoadFile("/bin/arfpkg/temp/" + pkg + "-" + version + "/" + pkg + "-latest/" + pkg + ".toml")
 			if err != nil {
 				panic(err)
 			}
 			instdir := pkgconf.Get(pkg + "." + "install-location").(string)
 			bins := pkgconf.Get(pkg + ".binaries" + ".mainexec").(string)
-			// install binary to /bin
-			inst := exec.Command("mv", "/bin/arfpkg/temp/"+foldername+version+"/"+pkg+"-latest/"+bins, instdir+"/"+pkg)
-			// make the file executable with CHMOD
-			chmod := exec.Command("chmod", "+x", instdir+"/"+pkg)
-			// clean up temp files
-			del := exec.Command("rm", "-rf", "/bin/arfpkg/temp/"+foldername+version)
-			// Move the tarball to archive
-			archive := exec.Command("mv", "/bin/arfpkg/temp/"+xzname, "/bin/arfpkg/package_archive/"+pkg+".tar.xz")
-			//	cd.Run()
-			inst.Run()
-			chmod.Run()
-			fmt.Printf("\nCleaning Up...")
-			del.Run()
-			archive.Run()
+			err = inst("/bin/arfpkg/temp/"+foldername+version+"/"+pkg+"-latest/"+bins, instdir+"/"+pkg)
+			if err != nil {
+				return
+			}
+			err = chmod(instdir+"/"+pkg, 0755)
+			if err != nil {
+				return
+			}
 
+			fmt.Printf("\nCleaning Up...")
+			err = del("/bin/arfpkg/temp/" + foldername + version)
+			if err != nil {
+				return
+			}
+			err = archive("/bin/arfpkg/temp/"+xzname, "/bin/arfpkg/package_archive/"+pkg+".tar.xz")
+			if err != nil {
+				return
+			}
 			pkginfo := PackageInfo{
 				Name:    pkg,
 				Version: version,
@@ -95,14 +105,19 @@ func install() {
 			if err != nil {
 				panic(err)
 			}
-			cleartmp := exec.Command("rm -rf", "/bin/arfpkg/temp/packages.toml")
-			cleartmp.Run()
-			fmt.Printf("\nAll Done\n")
+
+			err = cleartmp("/bin/arfpkg/temp/packages.toml")
+			if err != nil {
+				return
+			}
+			fmt.Printf("\nAll Done! 🦴\n")
 		} else {
+			// if no, abort
 			fmt.Printf("Aborted.\n")
 		}
 
 	} else {
+		// if no package found, exit
 		fmt.Printf("Package Not Found")
 	}
 }
