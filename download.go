@@ -13,7 +13,7 @@ func download(pkg string, url string) error {
 	packagenm := "/bin/arfpkg/temp/" + pkg
 	err := downloadFile(url, packagenm)
 	if err != nil {
-		fmt.Printf("ERROR!!!!\n exiting...", err)
+		fmt.Printf("ERROR FETCHING!!!!\n exiting...")
 	} else {
 		fmt.Printf("")
 	}

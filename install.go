@@ -15,8 +15,7 @@ type PackageInfo struct {
 }
 
 func install() {
-	fmt.Println("Enter package name: ")
-	fmt.Scanln(&pkg)
+
 	// TOML loading
 	pkglist, err := toml.LoadFile("/bin/arfpkg/temp/packages.toml")
 	if err != nil {
@@ -110,7 +109,7 @@ func install() {
 			if err != nil {
 				return
 			}
-			fmt.Printf("\nAll Done! 🦴\n")
+			//	fmt.Printf("\nAll Done! 🦴\n")  All done message should be handled by main.go
 		} else {
 			// if no, abort
 			fmt.Printf("Aborted.\n")
