@@ -10,7 +10,7 @@ import (
 // FINALLY CLEAN DOWNLOADING!!!1!!!1!!
 
 func download(pkg string, url string) error {
-	packagenm := "/bin/arfpkg/temp/" + pkg
+	packagenm := "/usr/bin/arfpkg/temp/" + pkg
 	err := downloadFile(url, packagenm)
 	if err != nil {
 		fmt.Printf("ERROR FETCHING!!!!\n exiting...")

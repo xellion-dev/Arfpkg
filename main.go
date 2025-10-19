@@ -38,7 +38,7 @@ func main() {
 				fmt.Println("Enter package name: ")
 				fmt.Scanln(&pkg)
 				install()
-				err := os.Remove("/bin/arfpkg/temp/packages.toml")
+				err := os.Remove("/usr/bin/arfpkg/temp/packages.toml")
 				if err != nil {
 					return
 				}
@@ -53,7 +53,7 @@ func main() {
 		os.Exit(1)
 	}
 	//ALWAYS CLEAR TEMP!!!!!
-	err := os.Remove("/bin/arfpkg/temp/packages.toml")
+	err := os.Remove("/usr/bin/arfpkg/temp/packages.toml")
 	if err != nil {
 		fmt.Printf("Temp already cleared.\n")
 	}
